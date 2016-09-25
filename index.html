@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/angular/angular.js"></script>
+</head>
+<body>
+    <div ng-app="app" root-d cont="cont">
+        <d1-ctrl cont="cont">
+
+
+                            <d2-ctrl cont="cont">
+
+
+                                                <d3-ctrl cont="cont"></d3-ctrl>
+
+
+
+                            </d2-ctrl>
+
+        </d1-ctrl>
+    </div>
+</body>
+</html>
+<script>
+    var app=angular.module('app',[]);
+
+    app.controller('ctrl',function ($scope,myService,$rootScope) {
+        this.promise=myService(parseInt(Math.random()*100)+'old');
+        this.cont=1;
+        var _this=this;
+        $scope.$watch(function () {
+            return _this.cont;
+        },function (n,o,s) {
+            console.log('ctrl-updata-AAAAAAA')
+            //console.log(n,o,s);
+            $scope.cont=n;
+            _this.cont=n;
+            //重点在有两个¥scope和——this
+        })
+    })
+
+    app.directive('rootD',function () {
+        return {
+            restrict:'A',
+            scope:{
+                cont:'=cont'
+            },
+            controller:'ctrl',
+            link:function (scope,ele,attrs) {
+                var _this=this;
+                scope.$watch(function () {
+                    return scope.cont;
+                },function (n,o,s) {
+                    console.log('ctrl-rootTTTTTT')
+                    //console.log(n,o,s);
+                    scope.cont=n;
+                    _this.cont=n;
+                },true)
+            }
+        }
+    })
+
+    app.directive('d1Ctrl',function () {
+        return {
+            restrict:'E',
+            scope:{
+                cont:'=cont'
+            },
+            require:'^rootD',
+            replace:true,
+            transclude:true,
+            controller:'ctrl',
+            template:'<div><h1>d1: {{cont}}</h1>  <input type="text" ng-model="cont"> <div ng-transclude></div></div>',
+            link:function (scope,ele,attrs,rootD) {
+               // scope.cont=this.cont;
+                //this.cont=scope.cont;
+                rootD.cont=scope.cont;
+                var _this=this;
+                scope.$watch(function () {
+                    return rootD.cont;
+                },function (n,o,s) {
+                    console.log('ctrl-updata11111')
+                    //console.log(n,o,s);
+                    //scope.cont=n;
+                    _this.cont=n;
+                },true)
+            }
+        }
+    })
+    app.directive('d2Ctrl',function () {
+        return {
+            restrict:'E',
+            require:['^d2Ctrl','^rootD'],
+            scope:{
+                cont:'=cont'
+            },
+            transclude:true,
+            controller:'ctrl',
+            template:'<div><h1>d2: {{cont}}</h1>  <input type="text" ng-model="cont"><div ng-transclude></div></div>',
+            link:function (scope,ele,attrs,ctrl) {
+                //scope.cont=d1Ctrl.cont;
+                ctrl[1].cont=scope.cont;
+                var _this=this;
+                scope.$watch(function () {
+                    return ctrl[1].cont;
+                },function (n,o,s) {
+                    console.log('ctrl-updata222222')
+                    //console.log(n,o,s);
+                    _this.cont=n;
+                    //scope.cont=n;
+                    ctrl[0].cont=n;
+                    //ctrl[1].cont=n;
+                },true)
+            }
+        }
+    })
+    app.directive('d3Ctrl',function($timeout,myService){
+        return {
+            restrict:'E',
+            scope:{
+                cont:'=cont'
+            },
+            require:['^d1Ctrl','^d2Ctrl','^rootD'],
+            replace:true,
+            transclude:true,
+            controller:'ctrl',
+            template:'<div><button>ChangeButton</button><h1>d3:{{cont}}</h1></div>',
+            link:function (scope,ele,attrs,ctrl) {
+                console.log(ctrl)
+                var _this=this;
+                $('button').bind('click',function () {
+                    scope.prmise=myService(parseInt(Math.random()*100)).then(function (data) {
+                        ctrl[2].cont=data;
+                        scope.$watch(function () {
+                            return scope.cont;
+                        },function (n,o,s) {
+                            console.log('ctrl-updata3333')
+                            console.log(n,o,s);
+                            scope.cont=n;
+                            ctrl[0].cont=n;
+                            ctrl[1].cont=n;
+                            //ctrl[2].cont=n;
+                            _this.cont=n;
+                        },true)
+                    });
+                })
+            }
+        }
+    })
+    
+    app.factory('myService',function ($http,$timeout) {
+        return function(g){
+            return $timeout(function () {
+                return g+':new|'
+            },300,true)
+        };
+    })
+
+</script>
