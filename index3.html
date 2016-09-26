@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css"/>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/angular/angular.js"></script>
+</head>
+<body>
+    <div ng-app="app" ng-controller="parentCtr">
+        <div ng-controller="childCtr1">ChildCtrl 1__name :
+            <input ng-model="name" type="text" ng-change="change(name);" />
+        </div>
+        <div ng-controller="childCtr2">ChildCtrl 2__name:
+            <input ng-model="ctr1Name" />
+        </div>
+    </div>
+</body>
+<script>
+    var app=angular.module("app", []);
+
+    app.controller("parentCtr",function ($scope) {
+        $scope.$on("Ctr1NameChange", function (event, msg) {
+            console.log("parent", msg);
+            $scope.$broadcast("Ctr1NameChangeFromParrent", msg);
+        });
+    })
+
+    app.controller("childCtr1", function ($scope) {
+        $scope.change = function (name) {
+            console.log("childCtr1", name);
+            $scope.$emit("Ctr1NameChange", name);
+        };
+    })
+
+    app.controller("childCtr2", function ($scope) {
+        $scope.$on("Ctr1NameChangeFromParrent", function (event, msg) {
+            console.log("childCtr2", msg);
+            $scope.ctr1Name = msg;
+        });
+    });
+</script>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="app">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css"/>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/angular/angular.js"></script>
+
+</head>
+<body>
+<div class="container">
+    <pre class="mark">
+        有1个父平控制器---parentCtrl
+            包含两个平级子集控制器--buttonCtrl  和    contentCtrl
+                buttonCtrl      包含两个按钮
+                contentCtrl     包含两个控制器  -- contentACtrl 和 contentBCtrl
+                两个服务          contentAService 和 contentBService 分别对应 contentACtrl 和 contentBCtrl 控制器
+    </pre>
+
+    <div ng-controller="parentCtrl" >
+
+        <div  class="btn-group"
+              button-directive
+              getDataA="getDataA"
+              getDataB="getDataB"
+              b="b"
+        >
+            <button class="btn btn-info" ind="0">buttonA</button>
+            <button class="btn btn-danger" ind="1">buttonB</button>
+        </div>
+        <div ng-controller="contentCtrl"
+
+             content-adirective
+        >
+            <div ng-controller="contentACtrl" class="alert alert-info col-md-6">
+                serviceA: <h1>{{title}}</h1>!
+            </div>
+            <div ng-controller="contentBCtrl" class="alert alert-danger col-md-6" style="display: none">
+                serviceB: <h1>{{text}}</h1>!
+            </div>
+        </div>
+
+    </div>
+
+</div>
+</body>
+</html>
+<script>
+    var app=angular.module('app',[]);
+
+    //根级--控制器
+    app.controller('parentCtrl',function ($scope) {
+        $scope.PARENT='WangYan';
+        console.log('parent',$scope)
+    });
+
+    //contentS --控制器
+    app.controller('contentCtrl',function ($scope) {
+    });
+    //contentA --控制器
+    app.controller('contentACtrl',function ($scope,contentAService) {
+    });
+    //dA directive
+    app.directive('contentAdirective',function (contentAService) {
+        return {
+            restrict:'A',
+            controller:'contentCtrl',
+            link:function (scope,ele,attrs) {
+                this.getDataA=function () {
+                    contentAService({
+                        a:'a'
+                    },function (res) {
+                        scope.dataA={title:'newA'+parseInt(Math.random()*100)};
+                        scope.title=scope.dataA.title;
+                    })
+                }
+                this.b='b';
+                scope.b='b';
+                scope.getDataA=this.getDataA;
+                console.log(scope)
+                scope.$parent.getDataA=scope.getDataA;
+            }
+        }
+    })
+
+
+    //contentB --控制器
+    app.controller('contentBCtrl',function ($scope,contentBService) {
+        this.getDataB=function(){
+            return contentBService({
+                b:'b'
+            },function (res) {
+                $scope.dataB={text:'newB'+parseInt(Math.random()*100)};
+                $scope.text=$scope.dataB.text;
+            })
+        }
+    });
+
+    app.directive('buttonDirective',function () {
+        return {
+            restrict:'ECMA',
+            controller:'parentCtrl',
+            link:function (scope,ele,attrs) {
+                $(ele).find('button').bind('click',function () {
+                    //alert($('.col-md-6').length)
+                    $('.col-md-6').hide();
+                    $('.col-md-6').eq($(this).attr('ind')).show();
+                    if($(this).attr('ind')==0){
+                        console.log(scope.getDataA,scope)
+                        scope.getDataA()
+                    }else{
+                        scope.getDataB()
+                    }
+                })
+            }
+        }
+    });
+
+    app.factory('contentAService',function ($http) {
+        return function (data,succ){
+            return $http.get('/package.json')
+                    .then(function(res){
+                        console.log('ContentA--service',data)
+                        var res={title:'from-AAAservice'}
+                        succ(res)
+                    },function (err) {
+
+                    })
+        }
+    })
+    app.factory('contentBService',function ($http) {
+        return function (data,succ){
+            return $http.get('/package.json')
+                    .then(function(res){
+                        console.log('ContentB--service',data)
+                        var res={text:'from-BBBservice'}
+                        succ(res)
+                    },function (err) {
+
+                    })
+        }
+    })
+
+</script>

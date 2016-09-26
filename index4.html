@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css"/>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/jquery/dist/jquery.js"></script>
+    <script src="node_modules/angular/angular.js"></script>
+</head>
+<body>
+    <body ng-app="myApp">
+    <pre class="mark text-info col-md-4">
+        $on
+        用于监听事件
+
+        $emit
+        用于向上分发（子作用域向父作用域）
+
+        $broadcast
+        用于向下广播（父作用域向子作用域）
+    </pre>
+    <div ng-controller="fatherCtrl">
+        <input type="text" ng-model="name" ng-change="nameOnChange1()">
+        <h1>Father: {{name}}!</h1>
+        <div ng-controller="sonCtrl">
+            <input type="text" ng-model="name" ng-change="nameOnChange2()">
+            <h1>Son: {{name}}</h1>
+        </div>
+    </div>
+</body>
+</body>
+<script>
+    var app = angular.module ('myApp', []);
+    app.controller('fatherCtrl', function ($scope) {
+        $scope.name = "father";
+        $scope.$on ('test', function(e, newName) {
+            $scope.name = newName;
+        });
+        $scope.nameOnChange1 = function () {
+            $scope.$broadcast ('test', $scope.name);
+        }
+    });
+    app.controller('sonCtrl', function ($scope) {
+        $scope.name = "son";
+        $scope.nameOnChange2 = function () {
+            $scope.$emit ('test', $scope.name);
+        }
+        $scope.$on ('test', function(e, newName) {
+            $scope.name = newName;
+        });
+    });
+</script>
+</html>
